@@ -109,6 +109,13 @@ app.post('/login',
   }
 )
 
+app.get('/logout',
+  (req, res) => {
+    res.clearCookie('token')
+    res.redirect('/login')
+  }
+)
+
 app.use(function (err, req, res, next) {
   console.error(err.stack)
   res.status(500).send('Something broke!')
