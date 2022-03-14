@@ -10,7 +10,27 @@ const cookieParser = require('cookie-parser')
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
 
-const port = 3000
+function extractFromCookie(req) {
+  let token = null;
+  if (req && req.cookies) {
+    token = req.cookies['token'];
+  }
+  return token;
+}
+
+const options = {
+  port: 3000,
+  jwtStrategy: {
+    jwtFromRequest: extractFromCookie,
+    secretOrKey: jwtSecret,
+    issuer: 'localhost:3000',
+    audience: 'localhost:3000'
+  },
+  server: {
+    key: fs.readFileSync(__dirname + '/cert/server.key'),
+    cert: fs.readFileSync(__dirname + '/cert/server.crt')
+  }
+}
 
 const app = express()
 app.use(logger('dev'))
@@ -41,19 +61,26 @@ passport.use('local', new LocalStrategy(
   }
 ))
 
-passport.use('jwt', new JWTStrategy(
-))
+passport.use('jwt', new JwtStrategy(options.jwtStrategy, (payload, done) => {
+  if (payload.sub == 'walrus') {
+    const user = { 
+      username: 'walrus',
+      description: 'the only user that deserves to contact the fortune teller'
+    }
+    return done(null, user);
+  }
+  return (null, false);
+}))
 
 
 app.use(express.urlencoded({ extended: true })) // needed to retrieve html form fields (it's a requirement of the local strategy)
 app.use(passport.initialize())  // we load the passport auth middleware to our express application. It should be loaded before any route.
 
-app.get('/', (req, res) => {
-  if (req.cookies['token'] === undefined) {
-    res.redirect('/login')
+app.get('/', passport.authenticate('jwt', { failureRedirect: '/login', session: false }),
+  (req, res) => {
+    res.send('hello ' + req.user.username)
   }
-  res.send('hello world' + req.cookies['token'])
-})
+)
 
 app.get('/login',
   (req, res) => {
@@ -86,13 +113,8 @@ app.use(function (err, req, res, next) {
   res.status(500).send('Something broke!')
 })
 
-const options = {
-  key: fs.readFileSync(__dirname + '/cert/server.key'),
-  cert: fs.readFileSync(__dirname + '/cert/server.cert')
-}
+var server = https.createServer(options.server, app);
 
-var server = https.createServer(options, app);
-
-server.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`)
+server.listen(options.port, () => {
+  console.log(`Example app listening at http://localhost:${options.port}`)
 })
