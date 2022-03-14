@@ -7,8 +7,9 @@ const LocalStrategy = require('passport-local').Strategy
 const jwt = require('jsonwebtoken')
 const jwtSecret = require('crypto').randomBytes(16)
 const cookieParser = require('cookie-parser')
-const JwtStrategy = require('passport-jwt').Strategy;
-const ExtractJwt = require('passport-jwt').ExtractJwt;
+const JwtStrategy = require('passport-jwt').Strategy
+const ExtractJwt = require('passport-jwt').ExtractJwt
+const fortune = require('fortune-teller')
 
 function extractFromCookie(req) {
   let token = null;
@@ -78,7 +79,7 @@ app.use(passport.initialize())  // we load the passport auth middleware to our e
 
 app.get('/', passport.authenticate('jwt', { failureRedirect: '/login', session: false }),
   (req, res) => {
-    res.send('hello ' + req.user.username)
+    res.send(`Hello ${req.user.username} your fortune: ${fortune.fortune()}`)
   }
 )
 
@@ -90,7 +91,7 @@ app.get('/login',
 
 app.post('/login',
   passport.authenticate('local', { failureRedirect: '/login', session: false }),
-  (req, res) => { //
+  (req, res) => {
     const jwtClaims = {
       sub: req.user.username,
       iss: 'localhost:3000',
