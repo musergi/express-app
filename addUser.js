@@ -19,6 +19,6 @@ async function createRecord(username, password) {
 
 createRecord('walrus', 'walrus').then((record) => {
   let users = JSON.parse(fs.readFileSync(dbFile));
-  users.push(record);
+  users[record.username] = record;
   fs.writeFileSync(dbFile, JSON.stringify(users));
 })

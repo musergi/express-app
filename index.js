@@ -10,6 +10,7 @@ const cookieParser = require('cookie-parser')
 const JwtStrategy = require('passport-jwt').Strategy
 const ExtractJwt = require('passport-jwt').ExtractJwt
 const fortune = require('fortune-teller')
+const scrypt = require('scrypt-pbkdf')
 
 function extractFromCookie(req) {
   let token = null;
@@ -21,6 +22,7 @@ function extractFromCookie(req) {
 
 const options = {
   port: 3000,
+  dbFile: 'users.json',
   jwtStrategy: {
     jwtFromRequest: extractFromCookie,
     secretOrKey: jwtSecret,
@@ -37,6 +39,20 @@ const app = express()
 app.use(logger('dev'))
 app.use(cookieParser())
 
+async function validate(user, password) {
+  if (user == null) {
+    return false;
+  }
+  const salt = Buffer.from(user['salt'], 'hex');
+  const key = Buffer.from(user['key'], 'hex');
+  const testedKey = Buffer.from(await scrypt.scrypt(password, salt, 32));
+  const matches = Buffer.compare(key, testedKey) == 0;
+  if (!matches) {
+    return false;
+  }
+  return user;
+}
+
 /*
 Configure the local strategy for using it in Passport.
 The local strategy requires a `verify` function which receives the credentials
@@ -51,14 +67,12 @@ passport.use('local', new LocalStrategy(
     session: false // we will store a JWT in the cookie with all the required session data. Our server does not need to keep a session, it's going to be stateless
   },
   function (username, password, done) {
-    if (username === 'walrus' && password === 'walrus') {
-      const user = { 
-        username: 'walrus',
-        description: 'the only user that deserves to contact the fortune teller'
-      }
-      return done(null, user) // the first argument for done is the error, if any. In our case there is no error, and so we pass null. The object user will be added by the passport middleware to req.user and thus will be available there for the next middleware and/or the route handler 
-    }
-    return done(null, false)  // in passport returning false as the user object means that the authentication process failed. 
+    fs.readFile(options.dbFile, async (err, data) => {
+      data = JSON.parse(data);
+      const user = data[username];
+      const validUser = await validate(user, password);
+      done(null, validUser);
+    });
   }
 ))
 
@@ -124,5 +138,5 @@ app.use(function (err, req, res, next) {
 var server = https.createServer(options.server, app);
 
 server.listen(options.port, () => {
-  console.log(`Example app listening at http://localhost:${options.port}`)
+  console.log(`Example app listening at https://localhost:${options.port}`)
 })
