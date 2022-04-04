@@ -11,6 +11,7 @@ const JwtStrategy = require('passport-jwt').Strategy
 const ExtractJwt = require('passport-jwt').ExtractJwt
 const fortune = require('fortune-teller')
 const scrypt = require('scrypt-pbkdf')
+const strategies = require('./strategies');
 
 function extractFromCookie(req) {
   let token = null;
@@ -23,6 +24,11 @@ function extractFromCookie(req) {
 const options = {
   port: 3000,
   dbFile: 'users.json',
+  localStrategy: {
+    usernameField: 'username',
+    passwordField: 'password',
+    session: false
+  },
   jwtStrategy: {
     jwtFromRequest: extractFromCookie,
     secretOrKey: jwtSecret,
