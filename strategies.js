@@ -1,11 +1,8 @@
 const fs = require('fs');
-const scrypt = require('scrypt-pbkdf')
-
-const fileLocalStrategyConfig = {
-	usernameField: 'username',
-    passwordField: 'password',
-    session: false
-};
+const LocalStrategy = require('passport-local').Strategy
+const JwtStrategy = require('passport-jwt').Strategy
+const GitHubStrategy = require('passport-github').Strategy;
+const scrypt = require('scrypt-pbkdf');
 
 /**
  * Authenticates a user.
@@ -55,8 +52,48 @@ const fileAuthentication = (filepath) => {
 	};
 };
 
-const fileLocalStrategy = (config, filepath) => new LocalStrategy(config, fileAuthentication(filepath));
+/**
+ * Generic file user fetcher factory.
+ * 
+ * Generates a function that get the user specified as the subject in the token
+ * from the filepath passed as a parameter.
+ * 
+ * @param filepath  filepath containing the JSON database
+ * 
+ * @returns the authentication function for the JwtStrategy
+ */
+const fileFetcher = (filepath) => {
+	return (payload, done) => {
+		fs.readFile(filepath, async (err, data) => {
+			data = JSON.parse(data);
+			if(!data[payload.sub]) {
+				done(null, false);
+			}
+			done(null, data[payload.sub]);
+		});
+	};
+};
 
-const fileJwtStrategy = (config, filepath) => new JwtStrategy(config, )
+const createUserFromProfile = (filepath) => {
+	return (accessToken, refreshToken, profile, done) => {
+		fs.readFile(filepath, async (err, data) => {
+			data = JSON.parse(data);
+			if (!data[profile.username]) {
+				data[profile.username] = profile;
+				fs.writeFileSync(filepath, data);
+			}
+			done(null, profile);
+		});
+	};
+};
 
-module.exports = {fileLocalStrategy}
+const fileLocalStrategy = (config, filepath) => new LocalStrategy(config,
+		fileAuthentication(filepath));
+
+const fileJwtStrategy = (config, filepath) => new JwtStrategy(config,
+		fileFetcher(filepath));
+
+const fileGithubStrategy = (config, filepath) => new GitHubStrategy(config,
+		createUserFromProfile(filepath));
+
+module.exports = {fileLocalStrategy, fileJwtStrategy, fileGithubStrategy};
