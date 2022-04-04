@@ -53,18 +53,11 @@ async function validate(user, password) {
   return user;
 }
 
-/*
-Configure the local strategy for using it in Passport.
-The local strategy requires a `verify` function which receives the credentials
-(`username` and `password`) submitted by the user.  The function must verify
-that the username and password are correct and then invoke `done` with a user
-object, which will be set at `req.user` in route handlers after authentication.
-*/
 passport.use('local', new LocalStrategy(
   {
-    usernameField: 'username',  // it MUST match the name of the input field for the username in the login HTML formulary
-    passwordField: 'password',  // it MUST match the name of the input field for the password in the login HTML formulary
-    session: false // we will store a JWT in the cookie with all the required session data. Our server does not need to keep a session, it's going to be stateless
+    usernameField: 'username',
+    passwordField: 'password',
+    session: false
   },
   function (username, password, done) {
     fs.readFile(options.dbFile, async (err, data) => {
@@ -88,8 +81,8 @@ passport.use('jwt', new JwtStrategy(options.jwtStrategy, (payload, done) => {
 }))
 
 
-app.use(express.urlencoded({ extended: true })) // needed to retrieve html form fields (it's a requirement of the local strategy)
-app.use(passport.initialize())  // we load the passport auth middleware to our express application. It should be loaded before any route.
+app.use(express.urlencoded({ extended: true }))
+app.use(passport.initialize())
 
 app.get('/', passport.authenticate('jwt', { failureRedirect: '/login', session: false }),
   (req, res) => {
@@ -114,8 +107,6 @@ app.post('/login',
       role: 'user'
     }
     const token = jwt.sign(jwtClaims, jwtSecret)
-    // we should create here the JWT for the fortune teller and send it to the user agent inside a cookie.
-    // we'll do it later, right now we'll just say 'Hello ' and the name of the user that we get from the `req.user` object provided by passport
     res.cookie('token', token, { maxAge: 900000, secure: true })
     res.redirect('/');
     console.log(`Token sent. Debug at https://jwt.io/?value=${token}`)
