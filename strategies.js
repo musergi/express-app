@@ -78,11 +78,15 @@ const createUserFromProfile = (filepath) => {
 	return (accessToken, refreshToken, profile, done) => {
 		fs.readFile(filepath, async (err, data) => {
 			data = JSON.parse(data);
+			const user = {
+				username: profile.username,
+				provider: profile.provider
+			};
 			if (!data[profile.username]) {
-				data[profile.username] = profile;
-				fs.writeFileSync(filepath, data);
+				data[profile.username] = user;
+				fs.writeFileSync(filepath, JSON.stringify(data));
 			}
-			done(null, profile);
+			done(null, user);
 		});
 	};
 };

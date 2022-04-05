@@ -56,8 +56,18 @@ passport.use('jwt', strategies.fileJwtStrategy(options.jwtStrategy, options.dbFi
 passport.use('github', strategies.fileGithubStrategy(options.githubStrategy, options.dbFile));
 
 
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function(user, done) {
+  done(null, user);
+});
+
 app.use(express.urlencoded({ extended: true }))
+app.use(require('express-session')({ secret: 'keyboard cat', resave: false, saveUninitialized: false }));
 app.use(passport.initialize())
+app.use(passport.session());
 
 app.get('/', passport.authenticate('jwt', { failureRedirect: '/login', session: false }),
   (req, res) => {
@@ -100,6 +110,7 @@ app.get('/oauth/github/callback',
       exp: Math.floor(Date.now() / 1000) + 604800,
       role: 'user'
     }
+    const token = jwt.sign(jwtClaims, jwtSecret);
     res.cookie('token', token, { maxAge: 900000, secure: true })
     res.redirect('/');
     console.log(`Token sent. Debug at https://jwt.io/?value=${token}`)
