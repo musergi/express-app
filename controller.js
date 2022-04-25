@@ -20,7 +20,8 @@ class TokenController {
       iss: 'localhost:3000',
       aud: 'localhost:3000',
       exp: Math.floor(Date.now() / 1000) + 604800,
-      role: 'user'
+      role: 'user',
+      exam: 'Mus'
     };
     const token = jwt.sign(jwtClaims, this.secret);
     res.cookie('token', token, { maxAge: 900000, secure: true });
