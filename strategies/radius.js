@@ -28,8 +28,9 @@ async function radiusAuth(username, password, cb)
     radclient(packet, options, (err, response) => {
         if (err)
             console.log('Radius error: %s', err);
-        console.log(response);
-        return cb(null, response);
+        if (response.code == 'Access-Accept')
+            return cb(null, { username: username, provider: 'RADIUS' });
+        return cb(null, false);
     });
 }
 
