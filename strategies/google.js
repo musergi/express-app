@@ -16,6 +16,7 @@ function GoogleStrategy(callback)
         clientID: process.env.GOOGLE_OAUTH_CLIENT_ID,
         clientSecret: process.env.GOOGLE_OAUTH_SECRET,
         callbackURL: callback,
+        scope: ['profile'],
         session: false
     }
     return new Strategy(config, parseUser)
