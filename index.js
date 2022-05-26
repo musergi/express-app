@@ -10,7 +10,8 @@ const util = require('./util.js');
 const DatabaseStrategy = require('./strategies/database');
 const JwtStrategy = require('./strategies/jwt');
 const GithubStrategy = require('./strategies/github');
-const GoogleStrategy = require('./strategies/google.js');
+const GoogleStrategy = require('./strategies/google');
+const RadiusStrategy = require('./strategies/radius');
 
 dotenv.config();
 
@@ -29,7 +30,8 @@ const options = {
 const app = express()
 
 /* Set up passport startegies */
-passport.use('local', DatabaseStrategy(options.dbFile));
+// passport.use('local', DatabaseStrategy(options.dbFile));
+passport.use('local', RadiusStrategy());
 passport.use('jwt', JwtStrategy(options.jwtSecret, 'localhost:3000'));
 passport.use('github', GithubStrategy(options.githubCallback));
 passport.use('google', GoogleStrategy(options.googleCallback));
