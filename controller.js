@@ -2,6 +2,9 @@ const fortune = require('fortune-teller');
 const jwt = require('jsonwebtoken');
 
 function index(req, res) {
+  ejs.renderFile('./index.html', { username: req.user.username, fortune: fortune.fortune() }, (err, str) => {
+    res.send(str);
+  })
   res.send(`Hello ${req.user.username} your fortune: ${fortune.fortune()}`)
 }
 
