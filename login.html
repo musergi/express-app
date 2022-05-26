@@ -4,25 +4,43 @@
 <head>
     <meta charset="UTF-8">
     <title>Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"> 
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
+    <link href="https://fonts.googleapis.com/css2?family=Itim&display=swap" rel="stylesheet">
+    <style>
+        body {font-family: 'Itim', cursive; display: flex; flex-direction: column;}
+        h1 {text-align: center;}
+        main {display: flex; margin: 2em auto; flex-direction: column; border: 3px blue solid; border-radius: 15px; padding: 1em;}
+        main > * {margin: auto;}
+        main * {display: flex;}
+        main > p {font-weight: bold;}
+        form {flex-direction: column; margin: 1.5em 2em;}
+        form > * {margin: 0.25em auto;}
+        main > a {text-decoration: none; background-color: blue; color: white; padding: 0.5em 1em; border-radius: 10px; margin: 0.2em 0.5em; text-align: center;}
+    </style>
 </head>
 
 <body>
-    <p><strong>Want to listen to the fortune-teller server?</strong></p>
-    <p>Please login to proceed</p>
-    <form action="/login" method="post">  <!-- when the formulary is submitted, it will be POSTed to /login-->
-        <div>
-            <label>Username:</label>
-            <input type="text" name="username" />
-        </div>
-        <div>
-            <label>Password:</label>
-            <input type="password" name="password" />
-        </div>
-        <div>
-            <input type="submit" value="Log In" />
-        </div>
-    </form>
-    <a href="/oauth/github/">Login with Github</a>
+    <h1><strong>Want to listen to the fortune-teller server?</strong></h1>
+    <main>
+        <p>Please login to proceed</p>
+        <form action="/login" method="post">  <!-- when the formulary is submitted, it will be POSTed to /login-->
+            <div>
+                <label>Username:</label>
+                <input type="text" name="username" />
+            </div>
+            <div>
+                <label>Password:</label>
+                <input type="password" name="password" />
+            </div>
+            <div>
+                <input type="submit" value="Log In" />
+            </div>
+        </form>
+        <a href="/oauth/github/">Login with Github</a>
+        <a href="#">Login with Google</a>
+        <a href="#">Login with RADIUS</a>
+    </main>
 </body>
 
 </html>

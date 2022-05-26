@@ -5,32 +5,19 @@ const logger = require('morgan');
 const passport = require('passport');
 const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
-const strategies = require('./strategies');
 const controller = require('./controller.js');
 const util = require('./util.js');
+const DatabaseStrategy = require('./strategies/database');
+const JwtStrategy = require('./strategies/jwt');
+const GithubStrategy = require('./strategies/github');
 
 dotenv.config();
 
 const options = {
   port: 3000,
   dbFile: process.env.DB_FILE,
-  localStrategy: {
-    usernameField: 'username',
-    passwordField: 'password',
-    session: false
-  },
-  jwtStrategy: {
-    jwtFromRequest: util.cookieExtractor,
-    secretOrKey: require('crypto').randomBytes(16),
-    issuer: 'localhost:3000',
-    audience: 'localhost:3000'
-  },
-  githubStrategy: {
-    clientID: process.env.GITHUB_OAUTH_CLIENT_ID,
-    clientSecret: process.env.GITHUB_OAUTH_SECRET,
-    callbackURL: "https://localhost:3000/oauth/github/callback",
-    session: false
-  },
+  jwtSecret: require('crypto').randomBytes(16),
+  githubCallback: "https://localhost:3000/oauth/github/callback",
   server: {
     key: fs.readFileSync(__dirname + '/cert/server.key'),
     cert: fs.readFileSync(__dirname + '/cert/server.crt')
@@ -40,9 +27,9 @@ const options = {
 const app = express()
 
 /* Set up passport startegies */
-passport.use('local', strategies.fileLocalStrategy(options.localStrategy, options.dbFile));
-passport.use('jwt', strategies.fileJwtStrategy(options.jwtStrategy, options.dbFile));
-passport.use('github', strategies.fileGithubStrategy(options.githubStrategy, options.dbFile));
+passport.use('local', DatabaseStrategy(options.dbFile));
+passport.use('jwt', JwtStrategy(options.jwtSecret, 'localhost:3000'));
+passport.use('github', GithubStrategy(options.githubCallback));
 
 /* Create different authentications */
 const localAuth = passport.authenticate('local', { failureRedirect: '/login', session: false });
@@ -61,7 +48,7 @@ app.get('/', jwtAuth, controller.index);
 app.get('/login', controller.loginPage);
 app.get('/oauth/github', githubAuth);
 
-const tokenController = new controller.TokenController(options.jwtStrategy.secretOrKey);
+const tokenController = new controller.TokenController(options.jwtSecret);
 app.post('/login', localAuth, tokenController.createToken.bind(tokenController));
 app.get('/oauth/github/callback', githubAuth, tokenController.createToken.bind(tokenController)); 
 app.get('/logout', tokenController.resetToken.bind(tokenController));
