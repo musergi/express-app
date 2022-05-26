@@ -20,12 +20,14 @@ async function radiusAuth(username, password, cb)
         ]
     };
     const options = {
-        host: '10.0.2.15',
-        port: '3001',
+        host: 'localhost',
+        port: '1812',
         timeout: 2000,
         retries: 3
     }
     radclient(packet, options, (err, response) => {
+        if (err)
+            console.log('Radius error: %s', err);
         console.log(response);
         return cb(null, response);
     });
